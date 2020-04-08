@@ -10,22 +10,22 @@ var bank=require('../controller/bank')
 var test = require('../controller/test')
 var csvfile_db=require('../controller/csvdata')
 var venue=require('../controller/venue')
-
+const {userAuthenticator} = require('../../middlewares/authenticator');
 
 // --------------------User_Module--------------------------
 route.post('/validatenumber',user.validatenumber)
 
-route.post('/upload',user.file_upload);
+route.post('/upload',[userAuthenticator],user.file_upload);
 
 route.post('/register',user.register);
 
 route.post('/login',user.login);
 
-route.post('/temperature',user.temperature);
+route.post('/temperature',[userAuthenticator],user.temperature);
 
-route.post('/answer',user.giveanswer);
+route.post('/answer',[userAuthenticator],user.giveanswer);
 
-route.post('/alert',user.alert);
+route.post('/alert',[userAuthenticator],user.alert);
 
 route.post('/edit',user.edit);
 
@@ -38,9 +38,9 @@ route.post('/delete',user.delete);
 route.post('/updtpass',user.updtpass);
 
 //  ------------------Admin------------
-route.post('/question',admin.addquestion);
+route.post('/question',[userAuthenticator],admin.addquestion);
 
-route.post('/adddoctor',admin.adddoctor);
+route.post('/adddoctor',[userAuthenticator],admin.adddoctor);
 
 // ---------------------------Venue----------------------------
 

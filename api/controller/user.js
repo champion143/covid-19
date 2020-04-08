@@ -82,7 +82,9 @@ module.exports.login=(req,res)=>{
             }) 
         }else{
         token = jwt.sign({
-            mobile: found.mobile,
+            id: found._id,
+            mobile:found.mobile,
+            email:found.email
         }, 'secret', { expiresIn: '2h' });
         res.json({
             "success":true,
