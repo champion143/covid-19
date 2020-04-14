@@ -10,9 +10,14 @@ var jwt=require("jsonwebtoken")
 var multer= require('multer')
 var message = require('../helper/message')
 var libphonenumber = require('libphonenumber-js');
+var otpGenerator = require('otp-generator')
+
+const { response } = require('../../lang/index')
+
+const translatte = require('translatte');
+
 //--------------------Register----------------------------------
 module.exports.register=(req,res)=>{
-        salt=5
     var firstname=req.body.firstname;
     var lastname = req.body.lastname;
     var mobile=req.body.mobile;
@@ -24,12 +29,11 @@ module.exports.register=(req,res)=>{
     let venue_id = req.body.venue_id;
     let type = req.body.type;
     let countrycode = req.body.countrycode;
+    let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     //var password=req.body.password;
     //bcrypt.hash(password, salt, function(err, hash) {
-
-        
-    
     var address=req.body.address;
+    let lng = req.headers.lng;
     usermodel.findOne({"mobile":req.body.mobile}).then((found)=>{
         if(found==null){
             console.log(firstname)
@@ -51,22 +55,38 @@ module.exports.register=(req,res)=>{
                     "address2":address2,
                     "user_id":user_id
                 }).save().then((value)=>{
-                    //Object.assign(data, {address1: value.address1, address2: value.address2  });
-                    res.json({
-                        "success":true,
-                        "message":"user successfully register",
-                        "Data":data,
-                        "address":value
-                    })
+                    let message = '';
+                    translatte(response.message.success.registersuccess, {to: lng}).then(res1 => {
+                        message = res1.text;
+                        res.json({
+                            "status":response.message.success.statusCode,
+                            "success":true,
+                            "message":message,
+                            "Data":data,
+                            "otp" : otp,
+                            "address":value
+                        })
+
+                    }).catch(err => {
+                        console.error(err);
+                    });
                 })
                 
             })
 
         }else{
-            res.json({
-                "success":false,
-                "message":"user Allready exists"
-            })
+            let message = '';
+            translatte(response.message.error.useralertexist, {to: lng}).then(res1 => {
+                message = res1.text;
+                res.json({
+                    "status":response.message.error.statusCode,
+                    "success":false,
+                    "message":message
+                }) 
+
+            }).catch(err => {
+                console.error(err);
+            });
         }
     })
 //});
@@ -74,36 +94,52 @@ module.exports.register=(req,res)=>{
 //----------------------------------Login---------------------------------------
 
 module.exports.login=(req,res)=>{
+    let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
+    let lng = req.headers.lng;
     usermodel.findOne({"mobile":req.body.mobile}).then((found)=>{
         if(found==null){
-            res.json({
-                "success":false,
-                "message":"No such user exists"
-            }) 
+            let message = '';
+            translatte(response.message.error.wronglogincredetial, {to: lng}).then(res1 => {
+                message = res1.text;
+                res.json({
+                    "status":response.message.error.statusCode,
+                    "success":false,
+                    "message":message
+                })
+            }).catch(err => {
+                console.error(err);
+            });
         }else{
         token = jwt.sign({
             id: found._id,
             mobile:found.mobile,
-            email:found.email
+            email:found.email,
         }, 'secret', { expiresIn: '2h' });
-        res.json({
-            "success":true,
-            "message":"Congrats!! Login Successful",
-            "token":token
-        })
-               
+        let message = '';
+        translatte(response.message.success.loginsuccess, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({
+                "status":response.message.success.statusCode,
+                "success":true,
+                "message":message,
+                "token":token,
+                "Data":found,
+                "otp" : otp,
+            })  
+        }).catch(err => {
+            console.error(err);
+        });
     }
 })
 }
 
 //---------------------------Give Answer----------------------------------------->
 module.exports.giveanswer=(req,res)=>{
-
     let AllAnswer = req.body;
     let user_id;
     let answer;
     let count = AllAnswer.length;
-
+    let lng = req.headers.lng;
     for(let i = 0; i < AllAnswer.length; i++ )
     {
         user_id = req.body.user_id;
@@ -111,14 +147,23 @@ module.exports.giveanswer=(req,res)=>{
         new answermodel({
             "user_id":user_id,
             "answer":answer
-        }).save().then((response)=>{
+        }).save().then((data)=>{
             if(i == (count-1))
             {
-                res.json({
-                    "success":true,
-                    "message":"Anser Successful",
-                    "Data":response
-                })
+                let message = '';
+                translatte(response.message.success.answersuccess, {to: lng}).then(res1 => {
+                    message = res1.text;
+                    res.json({
+                        "status":response.message.success.statusCode,
+                        "success":true,
+                        "message":message,
+                        "message":"Anser Successful",
+                        "Data":data
+                    })
+                }).catch(err => {
+                    console.error(err);
+                });
+
             }
         })
     }
@@ -132,6 +177,7 @@ module.exports.temperature=(req,res)=>{
     let status = req.body.status;
     let venue_id = req.body.venue_id;
     let type = req.body.type;
+    let lng = req.headers.lng;
     new temperaturemodel({
         "user_id":user_id,
         "temperature":temperature,
@@ -140,11 +186,18 @@ module.exports.temperature=(req,res)=>{
         "venue_id":venue_id,
         "type":type
     }).save().then((data)=>{
-        res.json({
-            "success":true,
-            "message":"User Temperature Updated Successful",
-            "Data":data
-        })
+        let message = '';
+        translatte(response.message.success.temperatureupdated, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({
+                "status":response.message.success.statusCode,
+                "success":true,
+                "message":message,
+                "Data":data
+            })
+        }).catch(err => {
+            console.error(err);
+        });
     })
 
 }
@@ -155,27 +208,56 @@ module.exports.alert=(req,res)=>{
     let date = req.body.date;
     let location = req.body.location;
     let user_id = req.body.user_id;
+    let lng = req.headers.lng;
     new alertmodel({
         "status":status,
         "date":date,
         "location":JSON.stringify(location),
         "user_id":user_id
     }).save().then((data)=>{
-        res.json({
-            "success":true,
-            "message":"Alert Successful",
-            "Data":data
-        })
+        let message = '';
+        translatte(response.message.success.alertmark, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({
+                "status":response.message.success.statusCode,
+                "success":true,
+                "message": message,
+                "Data":data
+            })
+        }).catch(err => {
+            console.error(err);
+        });
     })
 
 }
 
 //---------------------------User Qr--------------------------------------------->
 module.exports.userqr=(req,res)=>{
-    // let user_id = req.body.user_id;
-    // let peroid = req.body.peroid;
-    // let is_expire = req.body.is_expire;
-    // let 
+    let user_id = req.body.user_id;
+    let peroid = req.body.peroid;
+    let is_expire = req.body.is_expire;
+    let venue_id = req.body.venue_id;
+    let lng = req.headers.lng;
+    let qr = otpGenerator.generate(6, { upperCase: false, specialChars: false });
+    new userqrmodel({
+        "user_id" : user_id,
+        "peroid" : peroid,
+        "is_expire" : is_expire,
+        "venue_id" : venue_id,
+        "qr" : qr
+    }).save().then((Data)=>{
+        translatte(response.message.success.qrgeneratesuccess, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({
+                "status":response.message.success.statusCode,
+                "success":true,
+                "message":message,
+                "Data":Data,
+            })
+        }).catch(err => {
+            console.error(err);
+        });
+    })
 }
 
 //--------------------------check phone number with country code------------------>
@@ -184,17 +266,36 @@ module.exports.validatenumber=(req,res)=>{
     let phonenumber = req.body.phonenumber;
 
     let number = countrycode+phonenumber;
+    let lng = req.headers.lng;
 
     if(new libphonenumber.parsePhoneNumber(number).isValid()){
-        res.json({
-            "success":true,
-            "message":"phone number is valid"
-        })
+
+        let message = '';
+        translatte(response.message.success.validphonenumber, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({
+                "status":response.message.success.statusCode,
+                "success":true,
+                "message": message,
+            })
+        }).catch(err => {
+            console.error(err);
+        });
+
     }else{
-        res.json({
-            "success":false,
-            "message":"phone number is invalid"
-        })
+        let message = '';
+        translatte(response.message.error.invalidphonenumber, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({
+                "status":response.message.error.statusCode,
+                "success":false,
+                "message":message
+            })
+        }).catch(err => {
+            console.error(err);
+        });
+
+        
     }
 }
 
@@ -283,41 +384,41 @@ module.exports.delete=(req,res)=>{
 
 }
 //-----------------------------Reset Password---------------------------
-    module.exports.updtpass=(req,res)=>{
-        salt=5
-        var email=req.body.email
-        var newpassword=req.body.newpassword
-        var oldpassword=req.body.oldpassword
-        usermodel.findOne({"email":email}).then((found)=>{
-            if(found!=null)
-            {   
-                bcrypt.compare(oldpassword,found.password, function(err, result) {
-                    if(result==true){
-                        bcrypt.hash(newpassword, salt, function(err, hash){
-                        usermodel.updateOne({"email":email},{$set:{"password":hash}}).then((data)=>{
-                        res.json({
-                        "Data":data,
-                        "message":"Password Updation Successful"})
-                })
+module.exports.updtpass=(req,res)=>{
+    salt=5
+    var email=req.body.email
+    var newpassword=req.body.newpassword
+    var oldpassword=req.body.oldpassword
+    usermodel.findOne({"email":email}).then((found)=>{
+        if(found!=null)
+        {   
+            bcrypt.compare(oldpassword,found.password, function(err, result) {
+                if(result==true){
+                    bcrypt.hash(newpassword, salt, function(err, hash){
+                    usermodel.updateOne({"email":email},{$set:{"password":hash}}).then((data)=>{
+                    res.json({
+                    "Data":data,
+                    "message":"Password Updation Successful"})
             })
-            
-            }
-    
-            else{
-                res.json({
-                    "Success":false,
-                    "message":"Wrong Password!! Cannot update details"
-                })
-            }
         })
-    }
+        
+        }
+
         else{
             res.json({
                 "Success":false,
-                "message":"Sorry couldn't Find your Email address"})
-            }
-        })
-    }
+                "message":"Wrong Password!! Cannot update details"
+            })
+        }
+    })
+}
+    else{
+        res.json({
+            "Success":false,
+            "message":"Sorry couldn't Find your Email address"})
+        }
+    })
+}
 
 //----------------------------Image Upload------------------------------
 //Storage the folder functionality
@@ -343,9 +444,14 @@ var upload = multer({
 }).any('');
     
 module.exports.file_upload = (req, res) => {
+    let lng = req.headers.lng;
     upload(req, res, function (err) {
         if (err) {
-            res.json(err)
+            res.json({
+                "status":response.message.error.statusCode,
+                "success":false,
+                "message":err
+            })
         } else {
             var imagename = req.files;
             const path = imagename[0].filename;
@@ -353,11 +459,20 @@ module.exports.file_upload = (req, res) => {
             //var imageurl = "http://3.132.68.85:3000/"+path;
             var imageurl = req.protocol + "://" + req.headers.host + '/' + path;
             // var imageurl = process.env.IMG+':'+process.env.PORT+'/'+path;
+
+            let message = '';
+            translatte(response.message.success.imageuploadsuccess, {to: lng}).then(res1 => {
+                message = res1.text;
                 res.json({
-                    "success":"true",
+                    "status":response.message.success.statusCode,
+                    "success":true,
+                    "message": message,
+                    "path":path,
                     "imageurl": imageurl,
-                    'path': path
                 })
+            }).catch(err => {
+                console.error(err);
+            });  
             })
         }
     })

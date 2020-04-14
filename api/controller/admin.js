@@ -8,17 +8,29 @@ var token;
 var jwt=require("jsonwebtoken")
 var multer= require('multer')
 var message = require('../helper/message')
+const translatte = require('translatte');
+const { response } = require('../../lang/index')
 
 module.exports.addquestion=(req,res)=>{
     let question =  req.body.question;
+    let lng = req.headers.lng;
 
     new temperaturemodel({
         "question":question
-    }).save().then((response)=>{
-        res.json({
-            "success":true,
-            "message":"Question Addedd Successful",
-        })
+    }).save().then((data)=>{
+        let message = '';
+        translatte(response.message.success.questionaddedsuccess, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({  
+                "status":response.message.success.statusCode,
+                "success":true,
+                "message": message,
+                "Data":data
+            })
+        }).catch(err => {
+            console.error(err);
+        });
+        
     })
 
 }
@@ -31,6 +43,7 @@ module.exports.adddoctor=(req,res)=>{
     let is_available = req.body.is_available;
     let speciality = req.body.speciality;
     let location = JSON.stringify(req.body.location);
+    let lng = req.headers.lng;
     new doctormodel({
         "firstname":firstname,
         "lastname":lastname,
@@ -39,10 +52,19 @@ module.exports.adddoctor=(req,res)=>{
         "is_available":is_available,
         "speciality":speciality,
         "location":location
-    }).save().then((response)=>{
-        res.json({
-            "success":true,
-            "message":"Doctor Added Successfully",
-        })
+    }).save().then((data)=>{
+        
+        let message = '';
+        translatte(response.message.success.doctoraddedsuccess, {to: lng}).then(res1 => {
+            message = res1.text;
+            res.json({  
+                "status":response.message.success.statusCode,
+                "success":true,
+                "message": message,
+                "Data":data
+            })
+        }).catch(err => {
+            console.error(err);
+        });
     })
 }

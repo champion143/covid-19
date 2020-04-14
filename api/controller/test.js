@@ -1,13 +1,26 @@
 var testmodel=require('../model/test')
+const translate = require('google-translate-api');
+
+const translatte = require('translatte');
 
 //import { parsePhoneNumberFromString } from 'libphonenumber-js'
-var libphonenumber = require('libphonenumber-js');
+var libphonenumber = require('libphonenumber-js') 
 
-module.exports.insert = (req,res) => {
 
-    let number = '+12133734253';
-    console.log(new libphonenumber.parsePhoneNumber(number).isValid());
+module.exports.insert = (req,res1) => {
 
+    
+
+    translatte('Do you speak Russian?', {to: 'de'}).then(res => {
+        console.log(res.text);
+    }).catch(err => {
+        console.error(err);
+    });
+
+    //let number = '+12133734253';
+    //console.log(new libphonenumber.parsePhoneNumber(number).isValid());
+
+   
     // let name = req.body.name;
     // testmodel.findOne({"name":name}).then((found) => {
     //     if(found == null)
