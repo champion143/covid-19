@@ -32,7 +32,7 @@
     "node-cron": "^2.0.3",
     "nodemailer": "^6.4.3",
     "nodemon": "^2.0.2",
-    "otp-generator": "^1.1.0",
+    "otp-generator": "^3.0.0",
     "translatte": "^2.5.6"
   }
 }
