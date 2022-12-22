@@ -25,7 +25,7 @@
     "fs": "0.0.1-security",
     "google-translate-api": "^2.3.0",
     "heroku": "^7.39.2",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "libphonenumber-js": "^1.7.50",
     "mongoose": "^5.8.12",
     "multer": "^1.4.2",
